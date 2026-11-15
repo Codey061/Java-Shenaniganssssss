@@ -15,7 +15,6 @@ java.sourceCompatibility = "17"
 dependencies {
   implementation "com.github.xpenatan.gdx-teavm:backend-web:$gdxTeaVMVersion"
   implementation project(':core')
-
 }
 
 /// The tasks set up for debugging are gdx_teavm_web_js_build and gdx_teavm_web_js_run .
