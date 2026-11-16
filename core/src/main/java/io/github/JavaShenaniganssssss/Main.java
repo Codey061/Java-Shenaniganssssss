@@ -6,7 +6,6 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
@@ -27,8 +26,8 @@ public class Main extends ApplicationAdapter {
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
     private SpriteBatch batch;
-    private Texture image;
     private BitmapFont font;
+    public Body ballBody;
 
     public Main(){
         this.screenHeight=1;
@@ -49,7 +48,7 @@ public class Main extends ApplicationAdapter {
         camera.setToOrtho(false, 800, 480);
 
         //create new world with gravity pointing down
-        world = new World(new Vector2(15f, -20f),true);
+        world = new World(new Vector2(0f, -20f),true);
         debugRenderer = new Box2DDebugRenderer();
 
         BodyDef bodyDef = new BodyDef();
@@ -65,7 +64,7 @@ public class Main extends ApplicationAdapter {
 
         Body groundBody = world.createBody(groundBodyDef);
         Body groundBody2 = world.createBody(groundBodyDef2);
-        Body ballBody = world.createBody(bodyDef);
+        ballBody = world.createBody(bodyDef);
 
         //800, 480
         PolygonShape groundBox = new PolygonShape();
@@ -84,8 +83,8 @@ public class Main extends ApplicationAdapter {
         groundBox.dispose();
         groundBox2.dispose();
         batch = new SpriteBatch();
-        image = new Texture("libgdx.png");
         font = new BitmapFont();
+        Gdx.input.setInputProcessor(new InputHandler(ballBody));
     }
 
     @Override
@@ -101,12 +100,8 @@ public class Main extends ApplicationAdapter {
         debugRenderer.render(world, camera.combined);
 
         batch.begin();
-        batch.draw(image, 140, 210);
-        try {
-            font.draw(batch, "Display Screen = Width: " + screenWidth/800+ ", Height: " + screenHeight/480, screenWidth/2, screenHeight/2);
-        } catch (NullPointerException e) {
-            font.draw(batch, e.getMessage(), 400, 240);
-        }
+        font.getData().setScale(10f, 10f);
+        font.draw(batch, "I LOVE YOU MOMMMYYYYYY <3 <3 <3", 0, screenHeight/2f);
         batch.end();
     }
 
@@ -115,7 +110,6 @@ public class Main extends ApplicationAdapter {
         world.dispose();
         debugRenderer.dispose();
         batch.dispose();
-        image.dispose();
         font.dispose();
 
     }
