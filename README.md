@@ -19,7 +19,7 @@ JavaShenaniganssssss is a learning game about Python, a character who is trying 
 This project is a work in progress. Features and instructions may change as development continues.
 
 # How To Play
-1. Download The [Game](https://github.com/Codey061/Java-Shenaniganssssss/archive/refs/heads/main.zip)
+1. Download The [Game](https://github.com/Codey061/Java-Shenaniganssssss/archive/refs/heads/master.zip)
 2. temp
 3. temper
 # Credits
