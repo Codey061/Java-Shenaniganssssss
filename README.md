@@ -1,9 +1,28 @@
-# JavaShenaniganssssss
+# About the Game
+JavaShenaniganssssss is a learning game about Python, a character who is trying to learn Java. The game is currently in early development.
 
-### Credit
-Thanks to [libGDX](https://libgdx.com/) for help with the creation in this project using [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+# Current Features
+- Move the player with WASD.
+- Move the second character with the arrow keys.
 
-Special Thanks to Katrina Sajet for inspiration in the creation of this game
+# Planned Features
+- A playable level with walls and a goal.
+- Puzzles that introduce Java concepts.
+- More characters, levels, and challenges.
 
-### Description
-A phantom hack club game created by Alejandro Dominguez aka Codey
+# Requirements
+- Android Studio
+- A JDK version supported by the project’s Gradle setup
+- The Android SDK components required by the project
+
+# Project Status
+This project is a work in progress. Features and instructions may change as development continues.
+
+# How To Play
+1. Download The [Game](https://github.com/Codey061/Java-Shenaniganssssss/archive/refs/heads/main.zip)
+2. temp
+3. temper
+# Credits
+- [libGDX](https://libgdx.com/) and [gdx-liftoff](https://github.com/libgdx/gdx-liftoff) for the framework and project setup.
+- Katrina Sajet for inspiration.
+- Alejandro Dominguez (Codey) for creating the game.
