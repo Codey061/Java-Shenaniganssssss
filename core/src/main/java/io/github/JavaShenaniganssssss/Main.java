@@ -36,6 +36,7 @@ public class Main extends ApplicationAdapter {
     private OrthographicCamera camera;
     private SpriteBatch batch;
     private BitmapFont font;
+    private boolean stop = false;
 
     public Main(){
         this.screenHeight=1;
@@ -109,7 +110,12 @@ public class Main extends ApplicationAdapter {
         camera.update();
 
         //step the physics simulator every frame
-        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        try{
+            world.step(Gdx.graphics.getDeltaTime(), 6, 2);
+        } catch (Exception e) {
+            if(e.getMessage().equals("You Win!"))stop = true;
+            else throw e;
+        }
 
         //Render the Physics bodies
         debugRenderer.render(world, camera.combined);
@@ -118,7 +124,8 @@ public class Main extends ApplicationAdapter {
         font.getData().setScale(10f);
         font.setColor(Color.WHITE);
         //Adding font.getCapHeight() to y makes the pixel your moving now the bottom left one
-        font.draw(batch, "<I 3 Mommmyyyy", 0f, font.getCapHeight());
+        if(!stop)font.draw(batch, "Touch The Blue Square To Win!", 0f, font.getCapHeight());
+        else font.draw(batch, "You Win!", 0f, font.getCapHeight());
         batch.end();
     }
 
