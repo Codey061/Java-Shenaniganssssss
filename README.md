@@ -1,5 +1,5 @@
 # About the Game
-JavaShenaniganssssss is a learning game about Python, a character who is trying to learn Java. The game is currently in early development.
+Java-Shenaniganssssss is going to be a game about a python learning Java. The game is currently in *EXTREMELY* early development.
 
 # Current Features
 - Move the player with WASD.
@@ -20,9 +20,9 @@ This project is a work in progress. Features and instructions may change as deve
 
 # How To Play
 1. Download The [Game](https://github.com/Codey061/Java-Shenaniganssssss/archive/refs/heads/master.zip)
-2. temp
-3. temper
+2. Sync The Gradle 
+3. Click Play, Learn, and Have Fun!!
 # Credits
 - [libGDX](https://libgdx.com/) and [gdx-liftoff](https://github.com/libgdx/gdx-liftoff) for the framework and project setup.
 - Katrina Sajet for inspiration.
-- Alejandro Dominguez (Codey) for creating the game.
+- Alejandro Dominguez aka Codey (me) for creating the game.
