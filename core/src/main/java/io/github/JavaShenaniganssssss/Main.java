@@ -1,55 +1,47 @@
 package io.github.JavaShenaniganssssss;
 
-import com.badlogic.gdx.Graphics.DisplayMode;
-
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.BodyDef;
 import com.badlogic.gdx.physics.box2d.EdgeShape;
 import com.badlogic.gdx.physics.box2d.CircleShape;
+import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.Shape;
+import com.badlogic.gdx.utils.Null;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 
-import java.util.Map;
 
 
 /** {@link ApplicationListener} implementation shared by all platforms. */
 public class Main extends ApplicationAdapter {
+    private static final short BOX = 0b1;
+    private static final short SEN = 0b10;
+    private static final short PLAY = 0b100;
+    private static final short WALL = 0b1000;
     private final Vector2 TOP_LEFT = new Vector2(0f, 480f);
     private final Vector2 TOP_RIGHT = new Vector2(800f, 480f);
     private final Vector2 BOTTOM_LEFT = new Vector2(0f, 0f);
     private final Vector2 BOTTOM_RIGHT = new Vector2(800f, 0f);
-    private final int screenWidth;
-    private final int screenHeight;
+    private final float playerRadius = (float)Math.sqrt(400/Math.PI);
     private World world;
     private Box2DDebugRenderer debugRenderer;
     private OrthographicCamera camera;
-    private SpriteBatch batch;
+    private BatchDrawer batch;
     private BitmapFont font;
-    private boolean stop = false;
-
-    public Main(){
-        this.screenHeight=1;
-        this.screenWidth=1;
-    }
-    public Main(int w, int h){
-        this.screenWidth = w;
-        this.screenHeight = h;
-    }
-    public Main(DisplayMode displayMode){
-        this.screenWidth = displayMode.width;
-        this.screenHeight = displayMode.height;
-    }
+    public Body player;
+    public Body boxBody;
+    public Texture playerTexture;
 
     @Override
     public void create() {
@@ -61,10 +53,10 @@ public class Main extends ApplicationAdapter {
         debugRenderer = new Box2DDebugRenderer();
 
 
-        Body ballBody = bodyMaker(BodyDef.BodyType.DynamicBody, 10f, 100f);
-        ballBody.setFixedRotation(true);
+        player = bodyMaker(BodyDef.BodyType.DynamicBody, 10f, 100f);
+        player.setFixedRotation(true);
 
-        Body boxBody = bodyMaker(BodyDef.BodyType.DynamicBody, 400f, 240f);
+        boxBody = bodyMaker(BodyDef.BodyType.DynamicBody, 400f, 240f);
         boxBody.setFixedRotation(true);
 
         Body goalBody = bodyMaker(BodyDef.BodyType.KinematicBody, 0f, 0f);
@@ -74,20 +66,29 @@ public class Main extends ApplicationAdapter {
 
         //800, 480
         CircleShape ball = new CircleShape();
-        ball.setRadius((float)Math.sqrt(400/Math.PI));
-        ballBody.createFixture(ball, 100f).setUserData("Player");
+        Filter playerFilter = new Filter();
+        playerFilter.categoryBits = PLAY;
+        playerFilter.maskBits = BOX | WALL;
+        ball.setRadius(playerRadius);
+        addToBody(player, ball, 100f, "Player").setFilterData(playerFilter);
         ball.dispose();
 
         PolygonShape box = new PolygonShape();
+        Filter boxFilter = new Filter();
+        boxFilter.categoryBits = BOX;
+        boxFilter.maskBits = WALL | PLAY | SEN;
         box.setAsBox(10f, 10f);
-        boxBody.createFixture(box, 100f);
+        addToBody(boxBody, box, 50f, "Box").setFilterData(boxFilter);
+        boxBody.setLinearDamping(2f);
+        boxBody.getFixtureList().get(0).setRestitution(0f);
         box.dispose();
 
         PolygonShape win = new PolygonShape();
         win.setAsBox(10f, 10f, new Vector2(790f, 230), 0f);
-        Fixture goal = goalBody.createFixture(win, 0f);
-        goal.setSensor(true);
-        goal.setUserData("Win");
+        Filter winFilter = new Filter();
+        winFilter.categoryBits = SEN;
+        winFilter.maskBits = BOX;
+        addToBody(goalBody, win, 0f, true, "Win").setFilterData(winFilter);
         win.dispose();
 
         newEdgeShape(groundBody, BOTTOM_LEFT, BOTTOM_RIGHT);
@@ -95,13 +96,26 @@ public class Main extends ApplicationAdapter {
         newEdgeShape(groundBody, TOP_RIGHT, TOP_LEFT);
         newEdgeShape(groundBody, TOP_LEFT, BOTTOM_LEFT);
 
-        batch = new SpriteBatch();
+        Filter wallFilter = new Filter();
+        wallFilter.categoryBits = WALL;
+        wallFilter.maskBits = BOX | PLAY;
+        for(Fixture fixture:
+            groundBody.getFixtureList()) {
+            fixture.setFilterData(wallFilter);
+            fixture.setUserData("Wall");
+        }
+
+        batch = new BatchDrawer();
         font = new BitmapFont();
-        Gdx.input.setInputProcessor(new InputHandler(Map.of(
-            "Ball", new BodyHolder(ballBody, 100f),
-            "Box", new BodyHolder(boxBody,100f)
-        )));
-        world.setContactListener(new ContactHandler());
+        font.getData().setScale(1f);
+        font.setColor(Color.WHITE);
+
+        InputHandler inputHandler = new InputHandler(this);
+        ContactHandler contactHandler = new ContactHandler(this, inputHandler);
+        Gdx.input.setInputProcessor(inputHandler);
+        world.setContactListener(contactHandler);
+
+        playerTexture = new Texture("R-Head.png");
     }
     @Override
     public void render() {
@@ -110,21 +124,19 @@ public class Main extends ApplicationAdapter {
         camera.update();
 
         //step the physics simulator every frame
-        try{
-            world.step(Gdx.graphics.getDeltaTime(), 6, 2);
-        } catch (Exception e) {
-            if(e.getMessage().equals("You Win!"))stop = true;
-            else throw e;
-        }
+        world.step(Gdx.graphics.getDeltaTime(), 6, 2);
 
         //Render the Physics bodies
+        //REMOVE WHEN DONE TESTING
         debugRenderer.render(world, camera.combined);
 
+        batch.setProjectionMatrix(camera.combined);
+
         batch.begin();
-        font.getData().setScale(10f);
-        font.setColor(Color.WHITE);
+        batch.draw(playerTexture, player, playerRadius, 1f);
         //Adding font.getCapHeight() to y makes the pixel your moving now the bottom left one
-        if(!stop)font.draw(batch, "Touch The Blue Square To Win!", 0f, font.getCapHeight());
+        font.draw(batch, "R - Reset\nEsc - Leave\nWASD/Arow Keys - Move", 0f, font.getCapHeight()*6);
+        if(!ContactHandler.hasWon)font.draw(batch, "Move The Box To The Blue Square To Win!", 0f, font.getCapHeight());
         else font.draw(batch, "You Win!", 0f, font.getCapHeight());
         batch.end();
     }
@@ -135,24 +147,45 @@ public class Main extends ApplicationAdapter {
         debugRenderer.dispose();
         batch.dispose();
         font.dispose();
-
+        playerTexture.dispose();
     }
-    private void newEdgeShape(Body body, Vector2 start, Vector2 end){newEdgeShape(body, start, end, 0f);}
-    private void newEdgeShape(Body body, Vector2 start, Vector2 end, float density){
+
+    private void newEdgeShape(Body body, Vector2 start, Vector2 end){
         EdgeShape edge = new EdgeShape();
         edge.set(start, end);
-        body.createFixture(edge, density);
+        body.createFixture(edge, 0f);
         edge.dispose();
     }
-    private void newEdgeShape(Body body, float startX, float startY, float endX, float endY){newEdgeShape(body, startX, startY, endX, endY, 0f);}
-    private void newEdgeShape(Body body, float startX, float startY, float endX, float endY, float density){newEdgeShape(body, new Vector2(startX, startY), new Vector2(endX, endY), density);}
+
+    //private void newEdgeShape(Body body, float startX, float startY, float endX, float endY){newEdgeShape(body, startX, startY, endX, endY, 0f);}
+
+    //private void newEdgeShape(Body body, float startX, float startY, float endX, float endY, float density){newEdgeShape(body, new Vector2(startX, startY), new Vector2(endX, endY), density);}
+
     private Body bodyMaker(BodyDef.BodyType bodyType, Vector2 position){
         BodyDef bodyDef = new BodyDef();
         bodyDef.type = bodyType;
         bodyDef.position.set(position);
         return world.createBody(bodyDef);
     }
-    private Body bodyMaker(BodyDef.BodyType bodyType, float x, float y){
-        return bodyMaker(bodyType, new Vector2(x, y));}
 
+    private Body bodyMaker(BodyDef.BodyType bodyType, float x, float y){return bodyMaker(bodyType, new Vector2(x, y));}
+
+    private Fixture addToBody(Body body, Shape shape, float density, boolean sensor, @Null Object userData){
+        Fixture fixture = body.createFixture(shape, density);
+        fixture.setSensor(sensor);
+        if(userData!=null)fixture.setUserData(userData);
+        return fixture;
+    }
+
+    //private Fixture addToBody(Body body, Shape shape, float density, boolean sensor){
+        //return addToBody(body, shape, density, sensor, null);
+    //}
+
+    private Fixture addToBody(Body body, Shape shape, float density, Object userData){
+        return addToBody(body,shape, density, false, userData);
+    }
+
+    //private Fixture addToBody(Body body, Shape shape, float density){
+        //return addToBody(body, shape, density, false, null);
+    //}
 }

@@ -1,76 +1,75 @@
 package io.github.JavaShenaniganssssss;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.physics.box2d.Body;
 
-import java.util.HashMap;
-import java.util.Map;
 
 public class InputHandler extends InputAdapter {
-    private final HashMap<String, BodyHolder> bodies;
+    private final Main main;
+    private byte controls = 0;
 
-    public InputHandler(Map<String, BodyHolder> bodies) {
-        HashMap<String, BodyHolder> map = new HashMap<>();
-        for(String str : bodies.keySet()){
-            map.put(str.toLowerCase().trim(), bodies.get(str));
-        }
-        this.bodies = map;
+    public InputHandler(Main main) {
+        this.main = main;
     }
 
     @Override
     public boolean keyDown(int keyCode){
         switch (keyCode){
             case(Input.Keys.A):
-                bodies.get("ball").controls |= (1<<4);
+                controls |= 0b10000;
                 break;
             case(Input.Keys.LEFT):
-                bodies.get("box").controls |= 1;
+                controls |= 1;
                 break;
             case(Input.Keys.D):
-                bodies.get("ball").controls |= (1<<5);
+                controls |= 0b100000;
                 break;
             case(Input.Keys.RIGHT):
-                bodies.get("box").controls |= (1<<1);
+                controls |= 0b10;
                 break;
             case(Input.Keys.W):
-                bodies.get("ball").controls |= (1<<6);
+                controls |= 0b1000000;
                 break;
             case(Input.Keys.UP):
-                bodies.get("box").controls |= (1<<2);
+                controls |= 0b100;
                 break;
             case(Input.Keys.S):
-                bodies.get("ball").controls |= (byte)(1<<7);
+                controls |= (byte)0b10000000;
                 break;
             case(Input.Keys.DOWN):
-                bodies.get("box").controls |= (1<<3);
+                controls |= 0b1000;
                 break;
+            case(Input.Keys.R):
+                ContactHandler.hasWon = false;
+                main.boxBody.setTransform(400f, 240f, main.boxBody.getAngle());
+                main.boxBody.setLinearVelocity(0f, 0f);
+                return true;
             default:
                 return false;
         }
         speedUpdate();
         return true;
     }
-    private void speedUpdate(){
-        for(String str : bodies.keySet()){
-            speedUpdate(str);
-        }
-    }
-    private void speedUpdate(String str){
-        Body body = bodies.get(str).BODY;
-        float speed = bodies.get(str).SPEED;
-        byte controls = bodies.get(str).controls;
+    void speedUpdate(){
+        Body body = main.player;
+        float speed = 100f;
         byte x = 0;
         byte y = 0;
-        if((controls&(1<<6))!=0)y++;
-        if((controls&(1<<2))!=0)y++;
-        if((controls&(1<<4))!=0)x--;
-        if((controls&(1))!=0)x--;
-        if((controls&(1<<7))!=0)y--;
-        if((controls&(1<<3))!=0)y--;
-        if((controls&(1<<5))!=0)x++;
-        if((controls&(1<<1))!=0)x++;
+        if((controls & 0b1000000) != 0) y++;
+        if((controls & 0b100) != 0) y++;
+        if((controls & 0b10000) != 0) x--;
+        if((controls & 1) != 0) x--;
+        if((controls & 0b10000000) != 0) y--;
+        if((controls & 0b1000) != 0) y--;
+        if((controls & 0b100000) != 0) x++;
+        if((controls & 0b10) != 0) x++;
+        if(x >= 1) main.playerTexture = TextureHolder.RIGHT.texture;
+        else if(x <= -1) main.playerTexture = TextureHolder.LEFT.texture;
+        else if(y >= 1) main.playerTexture = TextureHolder.UP.texture;
+        else if(y <= -1) main.playerTexture = TextureHolder.DOWN.texture;
         body.setLinearVelocity(speed * MathUtils.clamp(x, -1, 1), speed * MathUtils.clamp(y, -1, 1));
     }
 
@@ -78,29 +77,32 @@ public class InputHandler extends InputAdapter {
     public boolean keyUp(int keyCode) {
         switch (keyCode){
             case(Input.Keys.A):
-                bodies.get("ball").controls &= ~(1<<4);
+                controls &= ~0b10000;
                 break;
             case(Input.Keys.LEFT):
-                bodies.get("box").controls &= ~1;
+                controls &= ~1;
                 break;
             case(Input.Keys.D):
-                bodies.get("ball").controls &= ~(1<<5);
+                controls &= ~0b100000;
                 break;
             case(Input.Keys.RIGHT):
-                bodies.get("box").controls &= ~(1<<1);
+                controls &= ~0b10;
                 break;
             case(Input.Keys.W):
-                bodies.get("ball").controls &= ~(1<<6);
+                controls &= ~0b1000000;
                 break;
             case(Input.Keys.UP):
-                bodies.get("box").controls &= ~(1<<2);
+                controls &= ~0b100;
                 break;
             case(Input.Keys.S):
-                bodies.get("ball").controls &= ~(byte)(1<<7);
+                controls &= ~(byte)0b10000000;
                 break;
             case(Input.Keys.DOWN):
-                bodies.get("box").controls &= ~(1<<3);
+                controls &= ~0b1000;
                 break;
+            case(Input.Keys.ESCAPE):
+                Gdx.app.exit();
+                return true;
             default:
                 return false;
         }
